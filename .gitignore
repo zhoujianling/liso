@@ -1,0 +1,11 @@
+.vscode/
+.idea/
+cmake-build-debug/
+CMakeFiles/
+*.exe
+*.cbp
+*.obj
+*.o
+*.out
+*.log
+*.cmake
