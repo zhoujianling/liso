@@ -82,7 +82,9 @@ static struct argp a = {
     options, parse_opt, args_doc, doc, 0, 0, 0
 };
 
-struct arguments arguments;
+struct arguments arguments = {
+    80, 443, "", "", "", "", "", "" 
+};
 struct arguments* parse_arugment(int argc, char **argv) {
     error_t parse_ret = argp_parse(&a, argc, argv, 0, 0, &arguments);
     if (parse_ret != 0) {
