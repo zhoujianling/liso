@@ -9,9 +9,10 @@
 #include <stdlib.h>
 
 
+static liso server;
 liso* liso_init(struct arguments* arg) {
-    liso* ptr = NULL;
-    return ptr;
+    
+    return &server;
 }
 
 

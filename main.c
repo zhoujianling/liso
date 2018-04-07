@@ -9,6 +9,7 @@
 
 int main(int argc, char** argv) {
     struct arguments* arg = parse_arugment(argc, argv);
+    
     liso* server = liso_init(arg);
     if (server != NULL) {
         start_server(server);
