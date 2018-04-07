@@ -123,6 +123,114 @@ liso/fast:
 	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/build
 .PHONY : liso/fast
 
+arg_parser.o: arg_parser.c.o
+
+.PHONY : arg_parser.o
+
+# target to build an object file
+arg_parser.c.o:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/arg_parser.c.o
+.PHONY : arg_parser.c.o
+
+arg_parser.i: arg_parser.c.i
+
+.PHONY : arg_parser.i
+
+# target to preprocess a source file
+arg_parser.c.i:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/arg_parser.c.i
+.PHONY : arg_parser.c.i
+
+arg_parser.s: arg_parser.c.s
+
+.PHONY : arg_parser.s
+
+# target to generate assembly for a file
+arg_parser.c.s:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/arg_parser.c.s
+.PHONY : arg_parser.c.s
+
+http_mod.o: http_mod.c.o
+
+.PHONY : http_mod.o
+
+# target to build an object file
+http_mod.c.o:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/http_mod.c.o
+.PHONY : http_mod.c.o
+
+http_mod.i: http_mod.c.i
+
+.PHONY : http_mod.i
+
+# target to preprocess a source file
+http_mod.c.i:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/http_mod.c.i
+.PHONY : http_mod.c.i
+
+http_mod.s: http_mod.c.s
+
+.PHONY : http_mod.s
+
+# target to generate assembly for a file
+http_mod.c.s:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/http_mod.c.s
+.PHONY : http_mod.c.s
+
+liso_core.o: liso_core.c.o
+
+.PHONY : liso_core.o
+
+# target to build an object file
+liso_core.c.o:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/liso_core.c.o
+.PHONY : liso_core.c.o
+
+liso_core.i: liso_core.c.i
+
+.PHONY : liso_core.i
+
+# target to preprocess a source file
+liso_core.c.i:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/liso_core.c.i
+.PHONY : liso_core.c.i
+
+liso_core.s: liso_core.c.s
+
+.PHONY : liso_core.s
+
+# target to generate assembly for a file
+liso_core.c.s:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/liso_core.c.s
+.PHONY : liso_core.c.s
+
+liso_server.o: liso_server.c.o
+
+.PHONY : liso_server.o
+
+# target to build an object file
+liso_server.c.o:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/liso_server.c.o
+.PHONY : liso_server.c.o
+
+liso_server.i: liso_server.c.i
+
+.PHONY : liso_server.i
+
+# target to preprocess a source file
+liso_server.c.i:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/liso_server.c.i
+.PHONY : liso_server.c.i
+
+liso_server.s: liso_server.c.s
+
+.PHONY : liso_server.s
+
+# target to generate assembly for a file
+liso_server.c.s:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/liso_server.c.s
+.PHONY : liso_server.c.s
+
 main.o: main.c.o
 
 .PHONY : main.o
@@ -159,6 +267,18 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... liso"
+	@echo "... arg_parser.o"
+	@echo "... arg_parser.i"
+	@echo "... arg_parser.s"
+	@echo "... http_mod.o"
+	@echo "... http_mod.i"
+	@echo "... http_mod.s"
+	@echo "... liso_core.o"
+	@echo "... liso_core.i"
+	@echo "... liso_core.s"
+	@echo "... liso_server.o"
+	@echo "... liso_server.i"
+	@echo "... liso_server.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
