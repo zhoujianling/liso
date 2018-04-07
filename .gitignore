@@ -10,3 +10,4 @@ CMakeFiles/
 *.log
 *.cmake
 liso
+CMakeCache.txt
