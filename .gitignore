@@ -9,6 +9,6 @@ CMakeFiles/
 *.out
 *.log
 *.cmake
-*.lex.c
+*.yy.c
 liso
 CMakeCache.txt
