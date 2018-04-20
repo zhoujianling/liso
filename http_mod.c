@@ -6,7 +6,7 @@
 #include <netinet/ip.h>
 #include <unistd.h>
 
-
+#define BUFFER_SIZE 4096
 
 http_mod* http_init(uint16_t port) {
     http_mod* m = (http_mod*) malloc(sizeof(http_mod*));
@@ -44,6 +44,15 @@ http_mod* http_init(uint16_t port) {
     return m;
 }
 
+
+void handle_request_loop(int sock_fd) {
+    int read_ret = 0;
+    uint8_t buffer[BUFFER_SIZE];
+    while (read_ret = recv(sock_fd, buffer, BUFFER_SIZE, 0) >= 1) {
+        fprintf(stdout, "%s", buffer);
+    }
+}
+
 int start_http(http_mod *http) {
     struct sockaddr_in client_sock_addr;
     socklen_t cs_size = sizeof(client_sock_addr);
@@ -56,6 +65,7 @@ int start_http(http_mod *http) {
         }
         return -1;
     }
+    handle_request_loop(new_sock); 
     fprintf(stdout, "start http successfully! \n"); 
     if (close(new_sock)) {
         fprintf(stderr, "Close real sock failed! \n'");
