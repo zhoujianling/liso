@@ -177,6 +177,33 @@ http_mod.c.s:
 	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/http_mod.c.s
 .PHONY : http_mod.c.s
 
+http_response.o: http_response.c.o
+
+.PHONY : http_response.o
+
+# target to build an object file
+http_response.c.o:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/http_response.c.o
+.PHONY : http_response.c.o
+
+http_response.i: http_response.c.i
+
+.PHONY : http_response.i
+
+# target to preprocess a source file
+http_response.c.i:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/http_response.c.i
+.PHONY : http_response.c.i
+
+http_response.s: http_response.c.s
+
+.PHONY : http_response.s
+
+# target to generate assembly for a file
+http_response.c.s:
+	$(MAKE) -f CMakeFiles/liso.dir/build.make CMakeFiles/liso.dir/http_response.c.s
+.PHONY : http_response.c.s
+
 liso_core.o: liso_core.c.o
 
 .PHONY : liso_core.o
@@ -273,6 +300,9 @@ help:
 	@echo "... http_mod.o"
 	@echo "... http_mod.i"
 	@echo "... http_mod.s"
+	@echo "... http_response.o"
+	@echo "... http_response.i"
+	@echo "... http_response.s"
 	@echo "... liso_core.o"
 	@echo "... liso_core.i"
 	@echo "... liso_core.s"

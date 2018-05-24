@@ -6,6 +6,9 @@
 #include <netinet/ip.h>
 #include <unistd.h>
 
+#include "http_response.h"
+#include "string.h"
+
 #define BUFFER_SIZE 4096
 
 http_mod* http_init(uint16_t port) {
@@ -48,8 +51,14 @@ http_mod* http_init(uint16_t port) {
 void handle_request_loop(int sock_fd) {
     int read_ret = 0;
     uint8_t buffer[BUFFER_SIZE];
+    http_response *hr = create_temp_hr();
+    char databuffer[200];
+    strcpy(databuffer, "This is a test. \n");
     while (read_ret = recv(sock_fd, buffer, BUFFER_SIZE, 0) >= 1) {
         fprintf(stdout, "%s", buffer);
+        fprintf(stdout, "Reading iter.... ...\n"); 
+        write(sock_fd, databuffer, 17);
+        // write_http_response(sock_fd, hr);
     }
 }
 
@@ -65,13 +74,14 @@ int start_http(http_mod *http) {
         }
         return -1;
     }
-    handle_request_loop(new_sock); 
     fprintf(stdout, "start http successfully! \n"); 
+    handle_request_loop(new_sock); 
     if (close(new_sock)) {
         fprintf(stderr, "Close real sock failed! \n'");
     }
     if (close(http->sockfd)) {
         fprintf(stderr, "Close sock failed! \n'");
     }
+    fprintf(stdout, "Liso has stopped.\n");
     return 0;
 }
