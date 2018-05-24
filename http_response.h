@@ -10,6 +10,9 @@ typedef struct http_response_header{
     char content_type[20];
     char content_encoding[20];
     char server[20];
+    char date[20];
+    char connection[20];
+    char transfer_encoding[20];
 } http_response_header;
 
 typedef struct http_response_body{

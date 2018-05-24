@@ -4,11 +4,31 @@
 #include "string.h"
 #include "unistd.h"
 
+#include "time.h"
+#include "locale.h"
+
+/** reference: http://en.cppreference.com/w/c/chrono/strftime **/
+const char *get_current_time() {
+    static char time_buff[70];
+    time_t current_time;
+    struct tm *current_tm;
+    time(&current_time);
+    current_tm = localtime(&current_time);
+
+    //setlocale(LC_TIME, "")
+
+    strftime(time_buff, sizeof(time_buff), "%a, %c ", current_tm);
+    return time_buff;
+}
+
 http_response *create_temp_hr() {
     http_response *h = (http_response*) malloc(1 * sizeof(http_response));
     strcpy(h->header.content_encoding, "gzip");
     strcpy(h->header.content_type, "text/html");
-    strcpy(h->header.server, "Liso v.0.0.0 alpha");
+    strcpy(h->header.server, "Liso v.0.0.1 alpha");
+    strcpy(h->header.date, get_current_time());
+
+    strcpy(h->body.data, "<html> <body> <h1> Test Page! </h1> </body> </html>");
     return h;
 }
 
@@ -18,9 +38,12 @@ size_t write_http_header(FILE *fp, http_response_header *header) {
         return -1;
     }
     size_t result_code = 0;
-    fprintf(fp, "Content-Type:%s\n", header->content_type);
-    fprintf(fp, "Content-Encoding:%s\n", header->content_encoding);
-    fprintf(fp, "Server:%s\n", header->server);
+    fprintf(fp, "Content-Type: %s\n", header->content_type);
+    fprintf(fp, "Content-Encoding: %s\n", header->content_encoding);
+    fprintf(fp, "Server: %s\n", header->server);
+    fprintf(fp, "Date: %s\n", header->date);
+    fprintf(stdout, "WRITEN HEADER!\n");
+    // fflush(fp);
     return result_code;
 }
 
@@ -31,6 +54,7 @@ size_t write_http_body(FILE *fp, http_response_body *body) {
     }
     size_t result_code = 0;
     fprintf(fp, "%s", body->data);
+    // fflush(fp);
     return result_code;
 }
 
@@ -48,5 +72,6 @@ int write_http_response(int fd, http_response *hr) {
         fprintf(stderr, "Failed to write http body.");  
         return -1;
     }
+    fflush(fp);
     return 0;
 }

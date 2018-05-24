@@ -1,4 +1,4 @@
 #!/bin/sh
 cmake .
-make
+make clean && make
 sudo ./liso
