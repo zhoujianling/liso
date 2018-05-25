@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 
 #include "http_response.h"
+#include "http_request.h"
 #include "string.h"
 
 #define BUFFER_SIZE 4096
@@ -50,18 +51,50 @@ http_mod* http_init(uint16_t port) {
     return m;
 }
 
+http_request *parse_request(char *str) {
+    http_request *req = (http_request *) malloc(1 * sizeof(http_request));
+    /** When I have not used flex, use a stupid method to find the resources
+     * that browser is requesting.
+     **/
+    int start = 0, end = 0; // start is '/'s localtion, end is first ' 's location
+    for (start = 0; start < BUFFER_SIZE; start ++) {
+        if (str[start] == '/') {
+            break;
+        }
+    } 
+    if (start == BUFFER_SIZE) {
+        fprintf(stderr, "Cannot find resource.\n");
+        return req;
+    }
+    for (end = start; end < BUFFER_SIZE; end ++) {
+        if (str[end] == ' ') {
+            break;
+        } 
+    }
+    memcpy(req->res, str + start, (end - start));
+    req->res[end - start] = 0; 
+    return req;
+}
+
+http_response *gen_hr(http_request* hrq) {
+    http_response *result = (http_response *) malloc(1 * sizeof(http_response));
+
+    return result;
+}
 
 void handle_request_loop(int sock_fd) {
     int read_ret = 0;
     uint8_t buffer[BUFFER_SIZE];
     http_response *hr = create_temp_hr();
-    char databuffer[200];
-    strcpy(databuffer, "This is a test. \n");
     while (read_ret = recv(sock_fd, buffer, BUFFER_SIZE, 0) >= 1) {
         fprintf(stdout, "%s", buffer);
         fprintf(stdout, "###############################\n"); 
-        // write(sock_fd, databuffer, 17);
+        // http_request *rq = parse_request(buffer);
+        // http_response * res = gen_hr(rq);
         write_http_response(sock_fd, hr);
+        // write_http_response(sock_fd, res);
+        // free(rq);
+        // free(res);
     }
 }
 

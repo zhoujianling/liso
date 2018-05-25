@@ -1,4 +1,6 @@
 #include "http_response.h"
+#include "http_df.h"
+
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
@@ -23,12 +25,14 @@ const char *get_current_time() {
 
 http_response *create_temp_hr() {
     http_response *h = (http_response*) malloc(1 * sizeof(http_response));
+    strcpy(h->body.data, "<!DOCTYPE html><html><head><title>Hi</title></head> <body> <h1> Test Page! </h1> </body> </html>");
+
     strcpy(h->header.content_encoding, "gzip");
     strcpy(h->header.content_type, "text/html");
+    strcpy(h->header.connection, "keep-alive");
     strcpy(h->header.server, "Liso v.0.0.1 alpha");
     strcpy(h->header.date, get_current_time());
-
-    strcpy(h->body.data, "<html> <body> <h1> Test Page! </h1> </body> </html>");
+    h->header.content_length = strlen(h->body.data);
     return h;
 }
 
@@ -38,10 +42,16 @@ size_t write_http_header(FILE *fp, http_response_header *header) {
         return -1;
     }
     size_t result_code = 0;
-    fprintf(fp, "Content-Type: %s\n", header->content_type);
-    fprintf(fp, "Content-Encoding: %s\n", header->content_encoding);
-    fprintf(fp, "Server: %s\n", header->server);
-    fprintf(fp, "Date: %s\n", header->date);
+    fprintf(fp, "HTTP/1.1 200 OK\r\n");
+    fprintf(fp, "Server: %s\r\n", header->server);
+    // fprintf(fp, "Date: Thu, 24 May 2018 11:28:45 GMT\r\n");
+    fprintf(fp, "Content-Type: %s\r\n", header->content_type);
+    fprintf(fp, "Content-Length: %d\r\n", header->content_length);
+    // fprintf(fp, "Transfer-Encoding: chunked\n");
+    fprintf(fp, "Connection: %s\r\n", header->connection); // keep-alive
+    // fprintf(fp, "Content-Encoding: %s\r\n", header->content_encoding);
+    // fprintf(fp, "Date: %s\n", header->date);
+    fprintf(fp, "\r\n");
     fprintf(stdout, "WRITEN HEADER!\n");
     // fflush(fp);
     return result_code;
@@ -53,7 +63,7 @@ size_t write_http_body(FILE *fp, http_response_body *body) {
         return -1;
     }
     size_t result_code = 0;
-    fprintf(fp, "%s", body->data);
+    fprintf(fp, "%s\n", body->data);
     // fflush(fp);
     return result_code;
 }
@@ -73,5 +83,6 @@ int write_http_response(int fd, http_response *hr) {
         return -1;
     }
     fflush(fp);
+    exit(0);
     return 0;
 }

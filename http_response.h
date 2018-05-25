@@ -6,9 +6,11 @@
 #include <netinet/in.h>
 #include "stdio.h"
 
+
 typedef struct http_response_header{
     char content_type[20];
     char content_encoding[20];
+    uint32_t content_length;
     char server[20];
     char date[20];
     char connection[20];
