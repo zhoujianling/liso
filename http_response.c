@@ -9,6 +9,8 @@
 #include "time.h"
 #include "locale.h"
 
+#define BUFFER_SIZE 4096
+
 /** reference: http://en.cppreference.com/w/c/chrono/strftime **/
 const char *get_current_time() {
     static char time_buff[70];
@@ -25,14 +27,14 @@ const char *get_current_time() {
 
 http_response *create_temp_hr() {
     http_response *h = (http_response*) malloc(1 * sizeof(http_response));
-    strcpy(h->body.data, "<!DOCTYPE html><html><head><title>Hi</title></head> <body> <h1> Test Page! </h1> </body> </html>");
+    //strcpy(h->body.data, "<!DOCTYPE html><html><head><title>Hi</title></head> <body> <h1> Test Page! </h1> </body> </html>");
 
     strcpy(h->header.content_encoding, "gzip");
     strcpy(h->header.content_type, "text/html");
     strcpy(h->header.connection, "keep-alive");
     strcpy(h->header.server, "Liso v.0.0.1 alpha");
     strcpy(h->header.date, get_current_time());
-    h->header.content_length = strlen(h->body.data);
+    h->header.content_length = 0;
     return h;
 }
 
@@ -54,6 +56,7 @@ size_t write_http_header(FILE *fp, http_response_header *header) {
     fprintf(fp, "\r\n");
     fprintf(stdout, "WRITEN HEADER!\n");
     // fflush(fp);
+    fflush(fp);
     return result_code;
 }
 
@@ -63,8 +66,20 @@ size_t write_http_body(FILE *fp, http_response_body *body) {
         return -1;
     }
     size_t result_code = 0;
-    fprintf(fp, "%s\n", body->data);
-    // fflush(fp);
+    FILE *res_fp = fdopen(body->res_fd, "r");
+    if (res_fp == NULL) {
+        fprintf(stderr, "Cannot find such file!\n");
+        return -1;
+    } else {
+    
+        uint8_t buffer[BUFFER_SIZE];
+        int read_cnt;
+        while ((read_cnt = read(body->res_fd, buffer, BUFFER_SIZE)) != 0) {
+            write(fileno(fp), buffer, read_cnt);
+        }
+        fclose(res_fp);
+    }
+    //fprintf(fp, "%s\n", body->data);
     return result_code;
 }
 

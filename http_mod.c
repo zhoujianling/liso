@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <unistd.h>
@@ -78,7 +79,22 @@ http_request *parse_request(char *str) {
 
 http_response *gen_hr(http_request* hrq) {
     http_response *result = (http_response *) malloc(1 * sizeof(http_response));
+    char filename[100];
+    struct stat file_stat;
+    strcpy(filename, "/var/www/html");
+    strcat(filename, hrq->res);
+    fprintf(stderr, "Res name: %s", filename);
+    FILE *fp = fopen(filename, "r");
+    if (fp != NULL) {
+        result->body.res_fd = fileno(fp); 
+        fstat(fileno(fp), &file_stat);
+    }
 
+    strcpy(result->header.content_type, "text/html");
+    strcpy(result->header.connection, "keep-alive");
+    strcpy(result->header.server, "Liso v.0.0.1 alpha");
+    strcpy(result->header.date, get_current_time());
+    result->header.content_length = file_stat.st_size;
     return result;
 }
 
@@ -89,12 +105,12 @@ void handle_request_loop(int sock_fd) {
     while (read_ret = recv(sock_fd, buffer, BUFFER_SIZE, 0) >= 1) {
         fprintf(stdout, "%s", buffer);
         fprintf(stdout, "###############################\n"); 
-        // http_request *rq = parse_request(buffer);
-        // http_response * res = gen_hr(rq);
-        write_http_response(sock_fd, hr);
-        // write_http_response(sock_fd, res);
-        // free(rq);
-        // free(res);
+        http_request *rq = parse_request(buffer);
+        http_response * res = gen_hr(rq);
+        // write_http_response(sock_fd, hr);
+        write_http_response(sock_fd, res);
+        free(rq);
+        free(res);
     }
 }
 
