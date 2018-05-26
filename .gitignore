@@ -8,7 +8,9 @@ CMakeFiles/
 *.o
 *.out
 *.log
+*.swp
 *.cmake
 *.yy.c
 liso
 CMakeCache.txt
+Makefile
