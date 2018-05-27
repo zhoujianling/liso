@@ -6,6 +6,7 @@ CMakeFiles/
 *.cbp
 *.obj
 *.o
+*.i
 *.out
 *.log
 *.swp

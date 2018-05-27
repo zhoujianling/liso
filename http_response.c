@@ -137,11 +137,11 @@ int write_http_response(int fd, http_response *hr) {
         return -1;
     }
     if (write_http_header(fp, &(hr->header)) != 0) {
-        fprintf(stderr, "Failed to write http header.");  
+        fprintf(stderr, "Failed to write http header.\n");  
         return -1;
     }
     if (write_http_body(fp, &(hr->body)) != 0) {
-        fprintf(stderr, "Failed to write http body.");  
+        fprintf(stderr, "Failed to write http body.\n");  
         return -1;
     }
     // fflush(fp);

@@ -17,6 +17,5 @@ int main(int argc, char** argv) {
         fprintf(stderr, "start server failed, exit.\n");
         exit(2);
     }
-    // printf("port is : %d ", arg->port);
     return 0;
 }

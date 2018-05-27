@@ -14,6 +14,6 @@ struct arguments {
     const char* certificate_file;
 };
 
-struct arguments* parse_arugment(int argc, char **argv); 
+extern struct arguments* parse_arugment(int argc, char **argv); 
 
 #endif

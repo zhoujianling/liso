@@ -16,8 +16,8 @@
 #define BUFFER_SIZE 4096
 #define FORK_CHILD_PID 0
 
-const char *PATH_404;
-const char *PATH_500;
+const char *PATH_404 = "./html/404.html";
+const char *PATH_500 = "./html/500.html";
 extern http_response hr_200;
 extern http_response hr_404;
 extern http_response hr_500;
@@ -57,6 +57,43 @@ http_mod* http_init(uint16_t port) {
     fprintf(stdout, "start http mod successfully! \n"); 
 
     return m;
+}
+
+static void recognize_content_type(const char *file_name, http_response *hr) {
+    int end = strlen(file_name);
+    int point_pos = -1;
+    if (end < 1 || end >= MAX_HEADER_BYTES) {
+        fprintf(stderr, "Something wrong when recognizing content type.\n");
+        return;
+    }
+    for (int i = end - 1; i >= 0; i --) {
+        if (file_name[i] == '.') {
+            point_pos = i;
+            break;
+        }
+    }
+    if (point_pos == -1) {
+        return; // cannot guess file type
+    }
+    static char suffix[10]; 
+    strcpy(suffix, file_name + point_pos + 1);
+    if (STR_EQUAL(suffix, "png")) {
+        hr->header.content_type = IMAGE_PNG;
+    } else if (STR_EQUAL(suffix, "jpg") 
+        || STR_EQUAL(suffix, "jpeg")) {
+        hr->header.content_type = IMAGE_JPEG;
+    } else if (STR_EQUAL(suffix, "gif")) {
+        hr->header.content_type = IMAGE_GIF;
+    } else if (STR_EQUAL(suffix, "html") 
+        || STR_EQUAL(suffix, "htm")) {
+        hr->header.content_type = TEXT_HTML;
+    } else if (STR_EQUAL(suffix, "css")) {
+        hr->header.content_type = TEXT_CSS;
+    } else if (STR_EQUAL(suffix, "js")) {
+        hr->header.content_type = APPLICATION_JS;
+    } else {
+        hr->header.content_type = APPLICATION_UNKNOWN;
+    }
 }
 
 http_request *parse_request(char *str) {
@@ -99,6 +136,7 @@ http_response *gen_hr(http_request* hrq) {
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
         memcpy(result, &hr_404, sizeof(http_response));
+        fprintf(stderr, "status code: %d\n", result->header.status_code);
         fp = fopen(PATH_404, "r");
     } else {
         memcpy(result, &hr_200, sizeof(http_response));
@@ -108,6 +146,7 @@ http_response *gen_hr(http_request* hrq) {
 
     fstat(fileno(fp), &file_stat);
     strcpy(result->header.date, get_current_time());
+    recognize_content_type(filename, result);
     result->header.content_length = file_stat.st_size;
 
     return result;
