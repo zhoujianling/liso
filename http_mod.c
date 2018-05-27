@@ -1,4 +1,3 @@
-#include "http_mod.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -7,13 +6,21 @@
 #include <netinet/ip.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <string.h>
 
+#include "http_mod.h"
 #include "http_response.h"
 #include "http_request.h"
-#include "string.h"
+#include "http_df.h"
 
 #define BUFFER_SIZE 4096
 #define FORK_CHILD_PID 0
+
+const char *PATH_404;
+const char *PATH_500;
+extern http_response hr_200;
+extern http_response hr_404;
+extern http_response hr_500;
 
 http_mod* http_init(uint16_t port) {
     http_mod* m = (http_mod*) malloc(sizeof(http_mod*));
@@ -54,7 +61,8 @@ http_mod* http_init(uint16_t port) {
 
 http_request *parse_request(char *str) {
     http_request *req = (http_request *) malloc(1 * sizeof(http_request));
-    /** When I have not used flex, use a stupid method to find the resources
+    /** 
+     * When I have not used flex, use a stupid method to find the resources
      * that browser is requesting.
      **/
     int start = 0, end = 0; // start is '/'s localtion, end is first ' 's location
@@ -79,22 +87,29 @@ http_request *parse_request(char *str) {
 
 http_response *gen_hr(http_request* hrq) {
     http_response *result = (http_response *) malloc(1 * sizeof(http_response));
-    char filename[100];
+    char filename[MAX_HEADER_BYTES];
     struct stat file_stat;
     strcpy(filename, "/var/www/html");
     strcat(filename, hrq->res);
-    fprintf(stderr, "Res name: %s", filename);
+    //TODO: support multiple index file
+    //TODO: suport config from file
+    if (filename[strlen(filename) - 1] == '/') {strcat(filename, "index.html");}
+
+    fprintf(stderr, "Res name: %s\n", filename);
     FILE *fp = fopen(filename, "r");
-    if (fp != NULL) {
-        result->body.res_fd = fileno(fp); 
-        fstat(fileno(fp), &file_stat);
+    if (fp == NULL) {
+        memcpy(result, &hr_404, sizeof(http_response));
+        fp = fopen(PATH_404, "r");
+    } else {
+        memcpy(result, &hr_200, sizeof(http_response));
     }
 
-    strcpy(result->header.content_type, "text/html");
-    strcpy(result->header.connection, "keep-alive");
-    strcpy(result->header.server, "Liso v.0.0.1 alpha");
+    result->body.res_fd = fileno(fp); 
+
+    fstat(fileno(fp), &file_stat);
     strcpy(result->header.date, get_current_time());
     result->header.content_length = file_stat.st_size;
+
     return result;
 }
 
