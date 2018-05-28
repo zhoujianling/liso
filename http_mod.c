@@ -122,6 +122,9 @@ http_request *parse_request(char *str) {
     return req;
 }
 
+/**
+ * search resource -> file_size -> date 
+ **/
 http_response *gen_hr(http_request* hrq) {
     http_response *result = (http_response *) malloc(1 * sizeof(http_response));
     char filename[MAX_HEADER_BYTES];
@@ -140,14 +143,14 @@ http_response *gen_hr(http_request* hrq) {
         fp = fopen(PATH_404, "r");
     } else {
         memcpy(result, &hr_200, sizeof(http_response));
+        recognize_content_type(filename, result);
     }
 
     result->body.res_fd = fileno(fp); 
 
     fstat(fileno(fp), &file_stat);
-    strcpy(result->header.date, get_current_time());
-    recognize_content_type(filename, result);
     result->header.content_length = file_stat.st_size;
+    strcpy(result->header.date, get_current_time());
 
     return result;
 }
@@ -156,7 +159,7 @@ void handle_request_loop(int sock_fd) {
     int read_ret = 0;
     uint8_t buffer[BUFFER_SIZE];
     http_response *hr = create_temp_hr();
-    while (read_ret = recv(sock_fd, buffer, BUFFER_SIZE, 0) >= 1) {
+    while ((read_ret = recv(sock_fd, buffer, BUFFER_SIZE, 0)) >= 1) {
         fprintf(stdout, "%s", buffer);
         fprintf(stdout, "###############################\n"); 
         http_request *rq = parse_request(buffer);
