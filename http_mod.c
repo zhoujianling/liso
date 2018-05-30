@@ -150,7 +150,7 @@ http_response *gen_hr(http_request* hrq) {
 
     fstat(fileno(fp), &file_stat);
     result->header.content_length = file_stat.st_size;
-    strcpy(result->header.date, get_current_time());
+    //strcpy(result->header.date, get_current_time());
 
     return result;
 }
@@ -158,7 +158,7 @@ http_response *gen_hr(http_request* hrq) {
 void handle_request_loop(int sock_fd) {
     int read_ret = 0;
     uint8_t buffer[BUFFER_SIZE];
-    http_response *hr = create_temp_hr();
+    //http_response *hr = create_temp_hr();
     while ((read_ret = recv(sock_fd, buffer, BUFFER_SIZE, 0)) >= 1) {
         fprintf(stdout, "%s", buffer);
         fprintf(stdout, "###############################\n"); 
@@ -192,7 +192,7 @@ int start_receive_conn(http_mod *http) {
             if (close(new_sock)) {
                 fprintf(stderr, "Close real sock failed! \n'");
             }
-            fprintf(stdout, "Close connection from %s", inet_ntoa(client_sock_addr.sin_addr));
+            fprintf(stdout, "Close connection from %s \n", inet_ntoa(client_sock_addr.sin_addr));
             exit(0);
         }
 

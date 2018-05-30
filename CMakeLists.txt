@@ -3,5 +3,6 @@ project(liso)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_BUILD_TYPE Debug)
-set(SOURCE_FILES main.c arg_parser.c liso_server.c liso_core.c http_mod.c http_response.c)
+set(SOURCE_FILES main.c arg_parser.c liso_server.c liso_core.c 
+http_mod.c http_response.c http_request_parser.c)
 add_executable(liso ${SOURCE_FILES})

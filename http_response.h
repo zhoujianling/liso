@@ -10,7 +10,7 @@
 typedef struct http_response_header{
 
     uint32_t status_code;
-    char date[25];
+    char date[35];
     uint32_t content_length;
     char *reason_phrase;
     char *content_type;
