@@ -12,7 +12,10 @@ CMakeFiles/
 *.swp
 *.cmake
 *.yy.c
+*.lex.c
+tags
 http_request_parser.c
 liso
 CMakeCache.txt
 Makefile
+compile_commands.json

@@ -6,12 +6,12 @@
 #define SERVER_PORT 80
 #define BUFFER_SIZE 4096
 
-start_parse();
+void start_parse();
 
 int main(int argc, char** argv) {
-    freopen("/home/zjl/code/lex/http.txt", "r", stdin);
-    start_parse();
-    return 0;
+    //freopen("/home/zjl/code/lex/http.txt", "r", stdin);
+    //start_parse();
+    //return 0;
     struct arguments* arg = parse_arugment(argc, argv);
     
     liso* server = liso_init(arg);

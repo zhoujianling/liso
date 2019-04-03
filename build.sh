@@ -1,5 +1,5 @@
 #!/bin/sh
-flex -o http_request_parser.c http_request_parser.l
+flex -o http_request_parser.lex.c http_request_parser.l
 cmake .
 make clean && make
 sudo ./liso

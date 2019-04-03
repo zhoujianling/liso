@@ -4,9 +4,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-typedef struct http_setting {
-    
-}http_setting;
 
 typedef struct http_mod {
     int sockfd;
