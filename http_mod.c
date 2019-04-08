@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/socket.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -15,6 +17,7 @@
 
 #define BUFFER_SIZE 4096
 #define FORK_CHILD_PID 0
+#define CONN_NUM 256
 
 const char *PATH_404 = "./html/404.html";
 const char *PATH_500 = "./html/500.html";
@@ -24,8 +27,8 @@ extern http_response hr_500;
 
 http_mod* http_init(uint16_t port) {
     http_mod* m = (http_mod*) malloc(sizeof(http_mod*));
-    m->sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (m->sockfd == -1) {
+    m->sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (m->sock_fd == -1) {
        fprintf(stderr, "Create socket failed.");
        free(m);
        return NULL;
@@ -35,20 +38,20 @@ http_mod* http_init(uint16_t port) {
     m->addr.sin_port = htons(port);
     m->addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    int bind_ret = bind(m->sockfd, (struct sockaddr*) &(m->addr), sizeof(m->addr));
+    int bind_ret = bind(m->sock_fd, (struct sockaddr*) &(m->addr), sizeof(m->addr));
     if (bind_ret != 0) {
         fprintf(stderr, "bind to %d failed!", port);
-        if(close(m->sockfd)) {
+        if(close(m->sock_fd)) {
             fprintf(stderr, "Close socked failed!\n");
         }
         free(m);
         return NULL;
     }
 
-    int listen_ret = listen(m->sockfd, 5);
+    int listen_ret = listen(m->sock_fd, 5);
     if (listen_ret != 0) {
         fprintf(stderr, "Failed to listen!\n");
-        if(close(m->sockfd)) {
+        if(close(m->sock_fd)) {
             fprintf(stderr, "Close socked failed!\n");
         }
         free(m);
@@ -157,7 +160,7 @@ http_response *gen_hr(http_request* hrq) {
 
 void handle_request_loop(int sock_fd) {
     int read_ret = 0;
-    uint8_t buffer[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE];
     //http_response *hr = create_temp_hr();
     while ((read_ret = recv(sock_fd, buffer, BUFFER_SIZE, 0)) >= 1) {
         fprintf(stdout, "%s", buffer);
@@ -171,16 +174,17 @@ void handle_request_loop(int sock_fd) {
     }
 }
 
-int start_receive_conn(http_mod *http) {
+
+int start_receive_conn_fork(http_mod *http) {
     struct sockaddr_in client_sock_addr;
     socklen_t cs_size = sizeof(client_sock_addr);
     fprintf(stdout, "Waiting for a connection, localport: %d\n", ntohs(http->addr.sin_port));
 
     while (1) {
-        int new_sock = accept(http->sockfd, (struct sockaddr*)(&client_sock_addr), &cs_size);
+        int new_sock = accept(http->sock_fd, (struct sockaddr*)(&client_sock_addr), &cs_size);
         if (new_sock == -1) {
             fprintf(stderr, "Accept connections failed!\n");
-            if (close(http->sockfd)) {
+            if (close(http->sock_fd)) {
                 fprintf(stderr, "Close socket failed!\n");
             }
             return -1;
@@ -203,9 +207,89 @@ int start_receive_conn(http_mod *http) {
 
     }
 
-    if (close(http->sockfd)) {
+    if (close(http->sock_fd)) {
         fprintf(stderr, "Close sock failed! \n'");
     }
     fprintf(stdout, "Liso has stopped.\n");
     return 0;
+}
+
+const struct timeval time_out_4_select = {
+    30, 0
+};
+
+void accept_conn_from_clients(http_mod *http) {
+    struct sockaddr_in client_sock_addr;
+    socklen_t cs_size = sizeof(client_sock_addr);
+    fprintf(stdout, "Waiting for a connection, localport: %d\n", ntohs(http->addr.sin_port));
+    int new_sock = accept(http->sock_fd, (struct sockaddr*)(&client_sock_addr), &cs_size);
+    if (new_sock == -1) {
+        fprintf(stderr, "Fail to accept connections.\n");
+        if (close(http->sock_fd)) {
+            fprintf(stderr, "Close socket failed!\n");
+        }
+    } else {
+        fprintf(stdout, "Receive connection from %s\n", inet_ntoa(client_sock_addr.sin_addr));
+    }
+    FD_SET(new_sock, &http->clean_fd_set); 
+    for (int i = 0; i < MAX_CLIENT_FD_COUNT; i ++) {
+        if (http->client_fds[i] == -1) {
+            http->client_fds[i] = new_sock;
+        }
+    }
+}
+
+void handle_data(http_mod *http, int client_index) {
+    int client_sock_fd = http->client_fds[client_index];
+    char buffer[BUFFER_SIZE];
+    int read_ret = recv(client_sock_fd, buffer, BUFFER_SIZE, 0);
+    if (read_ret == 0) {
+        close(client_sock_fd);
+        http->client_fds[client_index] = -1;
+        return;
+    }
+    http_request *rq = parse_request(buffer);
+    http_response * res = gen_hr(rq);
+    // write_http_response(sock_fd, hr);
+    write_http_response(client_sock_fd, res);
+    free(rq);
+    free(res);
+    
+}
+
+void read_data_from_clients(http_mod *http, fd_set *active_fd_set) {
+    for (int i = 0; i < MAX_CLIENT_FD_COUNT; i ++) {
+        if (http->client_fds[i] == -1) continue;
+        if (FD_ISSET(http->client_fds[i], active_fd_set)) {
+            handle_data(http, i);                  
+        }
+    }
+}
+
+int start_receive_conn_select(http_mod *http) {
+    FD_ZERO(&http->clean_fd_set);
+    for (int i = 0; i < MAX_CLIENT_FD_COUNT; i ++) http->client_fds[i] = -1;
+    FD_SET(http->sock_fd, &http->clean_fd_set);
+    
+    while (1) {
+        fd_set active_fd_set = http->clean_fd_set; 
+        int ret_val = select(MAX_CLIENT_FD_COUNT + 1, &active_fd_set, NULL, NULL, &time_out_4_select);
+        if (ret_val == -1) {
+            fprintf(stderr, "error on selecting fds...\n");
+        } else if (ret_val == 0) {
+            continue;
+        } else {
+            if (FD_ISSET(http->sock_fd, &active_fd_set)) {
+                accept_conn_from_clients(http);
+            } else {
+                read_data_from_clients(http, &active_fd_set);
+            } 
+        }
+    }
+    return 0;        
+}
+
+int start_receive_conn(http_mod *http) {
+    //return start_receive_conn_fork(http);
+    return start_receive_conn_select(http);
 }

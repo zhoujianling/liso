@@ -23,7 +23,12 @@ liso* liso_init(struct arguments* arg) {
 }
 
 int start_server(liso* server) {
+    if (server == NULL) {
+        fprintf(stderr, "server is null.\n");
+        return -1;
+    }
+        
     int http_ret = start_receive_conn(server->http);
-    return 0;
+    return http_ret;
 }
 
