@@ -10,6 +10,7 @@
 typedef struct http_mod {
     fd_set clean_fd_set;
     int client_fds[MAX_CLIENT_FD_COUNT];
+    int max_client_fd;
     int sock_fd;
     struct sockaddr_in addr;
 } http_mod;

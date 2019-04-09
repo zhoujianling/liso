@@ -3,7 +3,7 @@
 
 #include "http_df.h"
 
-typedef struct http_request {
+typedef struct http_request_ {
     char method[10];
     char res[MAX_HEADER_BYTES];// requested resource location
     char host[20]; 

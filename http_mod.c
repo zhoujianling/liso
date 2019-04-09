@@ -14,6 +14,7 @@
 #include "http_response.h"
 #include "http_request.h"
 #include "http_df.h"
+#include "logger.h"
 
 #define BUFFER_SIZE 4096
 #define FORK_CHILD_PID 0
@@ -26,7 +27,8 @@ extern http_response hr_404;
 extern http_response hr_500;
 
 http_mod* http_init(uint16_t port) {
-    http_mod* m = (http_mod*) malloc(sizeof(http_mod*));
+    http_mod* m = (http_mod*) malloc(sizeof(http_mod));
+    memset(m, 0, sizeof(http_mod));
     m->sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (m->sock_fd == -1) {
        fprintf(stderr, "Create socket failed.");
@@ -99,12 +101,10 @@ static void recognize_content_type(const char *file_name, http_response *hr) {
     }
 }
 
-http_request *parse_request(char *str) {
-    http_request *req = (http_request *) malloc(1 * sizeof(http_request));
-    /** 
-     * When I have not used flex, use a stupid method to find the resources
-     * that browser is requesting.
-     **/
+http_request* parse_request(char *str) {
+    http_request *req = (http_request *) malloc(sizeof(http_request));
+
+    memset(req, 0, sizeof(http_request));
     int start = 0, end = 0; // start is '/'s localtion, end is first ' 's location
     for (start = 0; start < BUFFER_SIZE; start ++) {
         if (str[start] == '/') {
@@ -121,7 +121,8 @@ http_request *parse_request(char *str) {
         } 
     }
     memcpy(req->res, str + start, (end - start));
-    req->res[end - start] = 0; 
+    req->res[end - start] = '\0'; 
+    
     return req;
 }
 
@@ -231,51 +232,60 @@ void accept_conn_from_clients(http_mod *http) {
     } else {
         fprintf(stdout, "Receive connection from %s\n", inet_ntoa(client_sock_addr.sin_addr));
     }
-    FD_SET(new_sock, &http->clean_fd_set); 
+    FD_SET(new_sock, &(http->clean_fd_set)); 
     for (int i = 0; i < MAX_CLIENT_FD_COUNT; i ++) {
         if (http->client_fds[i] == -1) {
             http->client_fds[i] = new_sock;
+            http->max_client_fd = new_sock > http->max_client_fd ? new_sock : http->max_client_fd;
+            break;
         }
     }
 }
 
-void handle_data(http_mod *http, int client_index) {
-    int client_sock_fd = http->client_fds[client_index];
-    char buffer[BUFFER_SIZE];
-    int read_ret = recv(client_sock_fd, buffer, BUFFER_SIZE, 0);
-    if (read_ret == 0) {
-        close(client_sock_fd);
-        http->client_fds[client_index] = -1;
-        return;
-    }
-    http_request *rq = parse_request(buffer);
-    http_response * res = gen_hr(rq);
-    // write_http_response(sock_fd, hr);
-    write_http_response(client_sock_fd, res);
-    free(rq);
-    free(res);
-    
-}
 
 void read_data_from_clients(http_mod *http, fd_set *active_fd_set) {
+    char buffer[BUFFER_SIZE];
     for (int i = 0; i < MAX_CLIENT_FD_COUNT; i ++) {
         if (http->client_fds[i] == -1) continue;
+        int client_sock_fd = http->client_fds[i];
         if (FD_ISSET(http->client_fds[i], active_fd_set)) {
-            handle_data(http, i);                  
+            //handle_data(http, i);                  
+            memset(buffer, 0, sizeof(char) * BUFFER_SIZE);
+            int read_ret = read(client_sock_fd, buffer, BUFFER_SIZE);
+            //int read_ret = recv(client_sock_fd, buffer, BUFFER_SIZE, 0);
+            if (read_ret <= 0) {
+                _debug("read_ret is leq 0");
+                FD_CLR(client_sock_fd, &(http->clean_fd_set));
+                close(client_sock_fd);
+                http->client_fds[i] = -1;
+                continue;
+            }
+            
+            http_request *rq = parse_request(buffer);
+            //_debug("###Buffer Info:");
+            //_debug(buffer);
+            _debug("###Res Info:");
+            _debug(rq->res);
+           // ===
+            http_response * res = gen_hr(rq);
+            write_http_response(client_sock_fd, res);
+           
+            free(res);
+            free(rq);
         }
     }
 }
 
 int start_receive_conn_select(http_mod *http) {
-    FD_ZERO(&http->clean_fd_set);
+    FD_ZERO(&(http->clean_fd_set));
     for (int i = 0; i < MAX_CLIENT_FD_COUNT; i ++) http->client_fds[i] = -1;
-    FD_SET(http->sock_fd, &http->clean_fd_set);
+    FD_SET(http->sock_fd, &(http->clean_fd_set));
     
     while (1) {
         fd_set active_fd_set = http->clean_fd_set; 
-        int ret_val = select(MAX_CLIENT_FD_COUNT + 1, &active_fd_set, NULL, NULL, &time_out_4_select);
+        int ret_val = select(MAX_CLIENT_FD_COUNT + 1, &active_fd_set, NULL, NULL, NULL);
         if (ret_val == -1) {
-            fprintf(stderr, "error on selecting fds...\n");
+            fprintf(stderr, "Error on selecting fds...\n");
         } else if (ret_val == 0) {
             continue;
         } else {
