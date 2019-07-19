@@ -12,7 +12,6 @@
 
 #include "http_mod.h"
 #include "http_response.h"
-#include "http_request.h"
 #include "http_df.h"
 #include "logger.h"
 

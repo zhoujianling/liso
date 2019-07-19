@@ -14,4 +14,13 @@
 
 #define STR_EQUAL(A,B) (strcmp(A, B) == 0)
 
+typedef struct http_request_ {
+    char method[10];
+    char res[MAX_HEADER_BYTES];// requested resource location
+    char host[20]; 
+    char http_version[4];
+    char connection[20];
+    
+}http_request;
+
 #endif
